@@ -1,274 +1,240 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claw Machine Legendary</title>
+<title>Pastel Teddy Claw Machine</title>
 
 <style>
 body{
     margin:0;
-    font-family:Arial;
-    background:black;
-    color:white;
-    text-align:center;
-    overflow:hidden;
+    background:#f7d9df;
+    font-family:Arial, sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
 }
 
-/* GAME AREA */
-#game{
-    width:450px;
-    height:620px;
-    margin:10px auto;
-    background:#111;
-    border:6px solid cyan;
+/* MACHINE BODY */
+.machine{
+    width:420px;
+    height:720px;
+    background:#f4bfc9;
+    border-radius:25px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+    position:relative;
+    padding:20px;
+}
+
+/* GLASS AREA */
+.glass{
+    width:100%;
+    height:480px;
+    background:rgba(255,255,255,0.35);
     border-radius:20px;
     position:relative;
     overflow:hidden;
-    box-shadow:0 0 30px cyan;
+    border:5px solid #e7aab6;
 }
 
 /* CLAW */
-#claw{
+.claw{
     position:absolute;
     top:0;
-    left:190px;
-    width:60px;
-    height:120px;
+    left:170px;
+    width:80px;
+    height:140px;
     transition:top 0.2s;
 }
 
 .cable{
     width:6px;
     height:70px;
-    background:linear-gradient(#aaa,#555);
+    background:#777;
     margin:auto;
 }
 
 .claw-head{
-    width:60px;
-    height:20px;
-    background:linear-gradient(#eee,#777);
-    border-radius:10px;
+    width:80px;
+    height:25px;
+    background:linear-gradient(#eee,#aaa);
+    border-radius:15px;
     position:relative;
 }
 
 .arm{
     position:absolute;
     width:6px;
-    height:40px;
-    background:silver;
-    bottom:-35px;
+    height:50px;
+    background:#ccc;
+    bottom:-45px;
     transform-origin:top center;
     transition:0.3s;
 }
 
-.left-arm{ left:10px; transform:rotate(25deg); }
-.right-arm{ right:10px; transform:rotate(-25deg); }
+.left-arm{ left:18px; transform:rotate(30deg); }
+.right-arm{ right:18px; transform:rotate(-30deg); }
 
 .grab .left-arm{ transform:rotate(5deg); }
 .grab .right-arm{ transform:rotate(-5deg); }
 
-/* PRIZES */
-#prize-area{
-    position:absolute;
-    bottom:0;
-    width:100%;
-    height:240px;
-}
-
-.prize{
-    width:40px;
-    height:40px;
+/* TEDDIES */
+.teddy{
+    width:70px;
+    height:70px;
+    background:#f5e6d3;
     border-radius:50%;
     position:absolute;
-    animation:float 3s infinite alternate ease-in-out;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:30px;
+    user-select:none;
 }
 
-@keyframes float{
-    from{transform:translateY(0);}
-    to{transform:translateY(-20px);}
-}
-
-.common{background:#3498db;}
-.rare{background:#9b59b6;}
-.epic{background:gold;}
-.boss{
-    background:red;
-    width:60px;
-    height:60px;
-    box-shadow:0 0 20px red;
-}
-
-/* JOYSTICK */
-#joystick{
-    width:120px;
+/* CONTROL PANEL */
+.panel{
+    margin-top:20px;
     height:120px;
+    background:#eaa9b6;
+    border-radius:20px;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+}
+
+.joystick{
+    width:80px;
+    height:80px;
+    background:#333;
     border-radius:50%;
-    border:3px solid cyan;
-    margin:10px auto;
     position:relative;
     touch-action:none;
 }
 
-#stick{
-    width:50px;
-    height:50px;
-    background:cyan;
+.stick{
+    width:40px;
+    height:40px;
+    background:#000;
     border-radius:50%;
     position:absolute;
-    top:35px;
-    left:35px;
+    top:20px;
+    left:20px;
 }
 
-/* GAME OVER */
-#gameOver{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.95);
-    display:none;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    font-size:30px;
-    animation:fadeIn 1s forwards;
+.drop-btn{
+    width:70px;
+    height:70px;
+    background:red;
+    border-radius:50%;
+    border:none;
+    box-shadow:0 5px 0 darkred;
 }
 
-@keyframes fadeIn{
-    from{opacity:0;}
-    to{opacity:1;}
-}
-
-.winner{
-    animation:glow 1s infinite alternate;
-}
-
-@keyframes glow{
-    from{text-shadow:0 0 10px gold;}
-    to{text-shadow:0 0 30px red;}
+.score{
+    position:absolute;
+    bottom:15px;
+    right:20px;
+    font-size:18px;
 }
 </style>
 </head>
 <body>
 
-<h2>🎮 Claw Machine Legendary</h2>
-
-<div id="game">
-    <div id="claw">
-        <div class="cable"></div>
-        <div class="claw-head">
-            <div class="arm left-arm"></div>
-            <div class="arm right-arm"></div>
+<div class="machine">
+    <div class="glass" id="glass">
+        <div class="claw" id="claw">
+            <div class="cable"></div>
+            <div class="claw-head">
+                <div class="arm left-arm"></div>
+                <div class="arm right-arm"></div>
+            </div>
         </div>
     </div>
-    <div id="prize-area"></div>
-</div>
 
-<div>
-Player 1: <span id="score1">0</span> |
-Player 2: <span id="score2">0</span>
-</div>
+    <div class="panel">
+        <div class="joystick" id="joystick">
+            <div class="stick" id="stick"></div>
+        </div>
+        <button class="drop-btn" onclick="dropClaw()"></button>
+    </div>
 
-<button onclick="insertCoin()">🪙 Insert Coin</button>
-<button onclick="dropClaw()">⬇ Drop</button>
-<button onclick="endGame()">End Game</button>
-
-<!-- JOYSTICK -->
-<div id="joystick">
-    <div id="stick"></div>
-</div>
-
-<!-- GAME OVER -->
-<div id="gameOver">
-    <div id="winnerText" class="winner"></div>
-    <button onclick="restart()">Play Again</button>
+    <div class="score">Score: <span id="score">0</span></div>
 </div>
 
 <script>
 const claw=document.getElementById("claw");
-const prizeArea=document.getElementById("prize-area");
+const glass=document.getElementById("glass");
+const joystick=document.getElementById("joystick");
+const stick=document.getElementById("stick");
 
-let clawX=190;
+let clawX=170;
 let dropping=false;
-let scores={1:0,2:0};
-let player=1;
-let credits=0;
+let score=0;
 
 const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 
-/* COIN SOUND */
-function insertCoin(){
-    credits++;
-    playCoin();
-}
-
-function playCoin(){
-    const osc=audioCtx.createOscillator();
-    const gain=audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.frequency.setValueAtTime(800,audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+0.1);
-    gain.gain.setValueAtTime(0.3,audioCtx.currentTime);
-    osc.start();
-    osc.stop(audioCtx.currentTime+0.2);
-}
-
-/* PRIZES */
-function createPrizes(){
-    prizeArea.innerHTML="";
-    for(let i=0;i<6;i++){
-        let p=document.createElement("div");
-        p.className="prize common";
-        p.dataset.points=1;
-        p.dataset.baseChance=0.8;
-        p.style.left=Math.random()*380+"px";
-        p.style.bottom=Math.random()*180+"px";
-        prizeArea.appendChild(p);
+/* CREATE TEDDIES */
+function createTeddies(){
+    for(let i=0;i<10;i++){
+        let teddy=document.createElement("div");
+        teddy.className="teddy";
+        teddy.innerHTML="🧸";
+        teddy.style.left=Math.random()*320+"px";
+        teddy.style.bottom=Math.random()*200+"px";
+        glass.appendChild(teddy);
     }
 }
-createPrizes();
+createTeddies();
 
-/* SMART PHYSICS */
+/* JOYSTICK CONTROL */
+joystick.addEventListener("pointermove",e=>{
+    if(e.buttons!==1)return;
+    const rect=joystick.getBoundingClientRect();
+    let x=e.clientX-rect.left-40;
+    x=Math.max(-25,Math.min(25,x));
+    stick.style.left=(20+x)+"px";
+
+    clawX+=x*0.1;
+    clawX=Math.max(0,Math.min(340,clawX));
+    claw.style.left=clawX+"px";
+});
+
+/* DROP FUNCTION */
 function dropClaw(){
-    if(dropping||credits<=0)return;
-    credits--;
+    if(dropping)return;
     dropping=true;
     claw.classList.add("grab");
+    playSound();
 
     let y=0;
     let interval=setInterval(()=>{
         y+=10;
         claw.style.top=y+"px";
-        if(y>=420){
+        if(y>=320){
             clearInterval(interval);
             checkCatch();
         }
     },30);
 }
 
+/* SMART CATCH */
 function checkCatch(){
-    const prizes=document.querySelectorAll(".prize");
-    prizes.forEach(p=>{
-        const pr=p.getBoundingClientRect();
+    const teddies=document.querySelectorAll(".teddy");
+    teddies.forEach(t=>{
+        const tr=t.getBoundingClientRect();
         const cr=claw.getBoundingClientRect();
-
-        if(cr.left<pr.right&&cr.right>pr.left){
-            let centerDiff=Math.abs((cr.left+30)-(pr.left+20));
-            let accuracy=Math.max(0,1-centerDiff/60); 
-            let finalChance=p.dataset.baseChance*accuracy;
-
-            if(Math.random()<finalChance){
-                scores[player]+=parseInt(p.dataset.points);
-                p.remove();
+        if(cr.left<tr.right && cr.right>tr.left){
+            let diff=Math.abs((cr.left+40)-(tr.left+35));
+            let accuracy=Math.max(0,1-diff/80);
+            if(Math.random()<accuracy){
+                t.remove();
+                score++;
+                document.getElementById("score").innerText=score;
             }
         }
     });
-
-    document.getElementById("score1").innerText=scores[1];
-    document.getElementById("score2").innerText=scores[2];
-
-    player=player===1?2:1;
 
     setTimeout(()=>{
         claw.style.top="0";
@@ -277,37 +243,16 @@ function checkCatch(){
     },500);
 }
 
-/* JOYSTICK CONTROL */
-const joystick=document.getElementById("joystick");
-const stick=document.getElementById("stick");
-
-joystick.addEventListener("touchmove",e=>{
-    const rect=joystick.getBoundingClientRect();
-    const touch=e.touches[0];
-    let x=touch.clientX-rect.left-60;
-    x=Math.max(-40,Math.min(40,x));
-    stick.style.left=(35+x)+"px";
-
-    clawX+=x*0.05;
-    clawX=Math.max(0,Math.min(380,clawX));
-    claw.style.left=clawX+"px";
-});
-
-/* GAME OVER */
-function endGame(){
-    document.getElementById("gameOver").style.display="flex";
-    let winner="Draw!";
-    if(scores[1]>scores[2])winner="Player 1 Wins!";
-    if(scores[2]>scores[1])winner="Player 2 Wins!";
-    document.getElementById("winnerText").innerText=winner;
-}
-
-function restart(){
-    scores={1:0,2:0};
-    document.getElementById("score1").innerText=0;
-    document.getElementById("score2").innerText=0;
-    document.getElementById("gameOver").style.display="none";
-    createPrizes();
+/* SOUND */
+function playSound(){
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value=700;
+    gain.gain.setValueAtTime(0.2,audioCtx.currentTime);
+    osc.start();
+    osc.stop(audioCtx.currentTime+0.15);
 }
 </script>
 
