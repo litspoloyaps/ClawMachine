@@ -155,6 +155,23 @@ button:hover{
   75%{transform:translateX(-10px);}
   100%{transform:translateX(0);}
 }
+
+/* GAME OVER */
+#gameOver{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    color:#0ff;
+    font-size:30px;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:100;
+}
+#winnerText{
+    text-shadow:0 0 20px #ff0,0 0 30px #f00;
+}
 </style>
 </head>
 <body>
@@ -191,9 +208,16 @@ AI: <span id="score2">0</span>
     <div id="stick"></div>
 </div>
 
+<!-- BACKGROUND MUSIC -->
 <audio id="bgMusic" loop autoplay>
     <source src="https://assets.mixkit.co/music/preview/mixkit-futuristic-technology-567.mp3" type="audio/mpeg">
 </audio>
+
+<!-- GAME OVER SCREEN -->
+<div id="gameOver">
+    <div id="winnerText"></div>
+    <button onclick="restartGame()" style="margin-top:20px;">Play Again</button>
+</div>
 
 <script>
 const claw=document.getElementById("claw");
@@ -314,6 +338,11 @@ function checkCatch(){
         claw.classList.remove("grab");
         dropping=false;
 
+        // Check if game over (no prizes left)
+        if(prizeArea.children.length===0){
+            setTimeout(endGame, 500);
+        }
+
         if(aiEnabled && gameState.player===2){
             setTimeout(aiMove,1000);
         }
@@ -357,6 +386,34 @@ function buyPower(){ if(money>=30){ money-=30; clawPower+=0.3; updateMoney(); } 
 function buyMagnet(){ if(money>=50){ money-=50; magnet=true; updateMoney(); } }
 function buyLaser(){ if(money>=80){ money-=80; laser=true; updateMoney(); } }
 function updateMoney(){ document.getElementById("money").innerText=money; }
+
+/* END GAME AND DECLARE WINNER */
+function endGame(){
+    let winner="Draw!";
+    if(gameState.scores[1] > gameState.scores[2]) winner="Player 1 Wins!";
+    if(gameState.scores[2] > gameState.scores[1]) winner="AI Wins!";
+
+    document.getElementById("winnerText").innerText = winner;
+    document.getElementById("gameOver").style.display="flex";
+}
+
+/* RESTART GAME */
+function restartGame(){
+    gameState.scores = {1:0, 2:0};
+    gameState.player = 1;
+    clawPower=1;
+    magnet=false;
+    laser=false;
+    money=50;
+    credits=0;
+
+    document.getElementById("score1").innerText = 0;
+    document.getElementById("score2").innerText = 0;
+    document.getElementById("money").innerText = money;
+    document.getElementById("gameOver").style.display = "none";
+
+    createPrizes();
+}
 </script>
 
 </body>
