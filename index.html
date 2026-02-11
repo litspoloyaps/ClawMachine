@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claw Machine Cyberpunk</title>
+<title>Claw Machine Cyberpunk Boss</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
@@ -103,7 +103,13 @@ h2{
     background:red;
     width:60px;
     height:60px;
-    box-shadow:0 0 20px red;
+    box-shadow:0 0 20px red, 0 0 40px yellow inset;
+    animation:bossGlow 1s infinite alternate;
+}
+
+@keyframes bossGlow{
+    from{box-shadow:0 0 20px red, 0 0 40px yellow inset;}
+    to{box-shadow:0 0 50px red, 0 0 80px yellow inset;}
 }
 
 /* UI */
@@ -140,11 +146,20 @@ button:hover{
     top:35px;
     left:35px;
 }
+
+/* BOSS ATTACK SHAKE */
+@keyframes shake{
+  0%{transform:translateX(0);}
+  25%{transform:translateX(-10px);}
+  50%{transform:translateX(10px);}
+  75%{transform:translateX(-10px);}
+  100%{transform:translateX(0);}
+}
 </style>
 </head>
 <body>
 
-<h2>🌌 Claw Machine Cyberpunk</h2>
+<h2>🌌 Claw Machine Cyberpunk Boss</h2>
 
 <div id="game">
     <div id="claw">
@@ -176,6 +191,10 @@ AI: <span id="score2">0</span>
     <div id="stick"></div>
 </div>
 
+<audio id="bgMusic" loop autoplay>
+    <source src="https://assets.mixkit.co/music/preview/mixkit-futuristic-technology-567.mp3" type="audio/mpeg">
+</audio>
+
 <script>
 const claw=document.getElementById("claw");
 const prizeArea=document.getElementById("prize-area");
@@ -197,10 +216,10 @@ let aiEnabled=true;
 
 const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 
-/* CREATE PRIZES */
+/* CREATE PRIZES INCLUDING BOSS */
 function createPrizes(){
     prizeArea.innerHTML="";
-    for(let i=0;i<10;i++){
+    for(let i=0;i<8;i++){
         let p=document.createElement("div");
         let rand=Math.random();
 
@@ -214,15 +233,15 @@ function createPrizes(){
             p.dataset.points=3;
             p.dataset.baseChance=0.5;
         }
-        else if(rand<0.97){
+        else if(rand<0.95){
             p.className="prize epic";
             p.dataset.points=5;
             p.dataset.baseChance=0.3;
         }
         else{
             p.className="prize boss";
-            p.dataset.points=10;
-            p.dataset.baseChance=0.15;
+            p.dataset.points=15;
+            p.dataset.baseChance=0.1;
         }
 
         p.style.left=Math.random()*360+"px";
@@ -233,11 +252,9 @@ function createPrizes(){
 createPrizes();
 
 /* INSERT COIN */
-function insertCoin(){
-    credits++;
-}
+function insertCoin(){ credits++; }
 
-/* DROP */
+/* DROP CLAW */
 function dropClaw(){
     if(dropping||credits<=0)return;
     credits--;
@@ -276,6 +293,12 @@ function checkCatch(){
                 gameState.scores[gameState.player]+=points;
                 money+=points*5;
                 document.getElementById("money").innerText=money;
+
+                if(p.classList.contains("boss")){
+                    document.getElementById("game").style.animation="shake 0.4s";
+                    setTimeout(()=>document.getElementById("game").style.animation="",400);
+                }
+
                 p.remove();
             }
         }
@@ -308,11 +331,9 @@ function aiMove(){
 /* KEYBOARD SUPPORT */
 document.addEventListener("keydown",e=>{
     if(dropping)return;
-
     if(e.key==="ArrowLeft") clawX-=15;
     if(e.key==="ArrowRight") clawX+=15;
     if(e.key===" ") dropClaw();
-
     clawX=Math.max(0,Math.min(380,clawX));
     claw.style.left=clawX+"px";
 });
@@ -326,40 +347,16 @@ joystick.addEventListener("pointermove",e=>{
     let x=e.clientX-rect.left-60;
     x=Math.max(-40,Math.min(40,x));
     stick.style.left=(35+x)+"px";
-
     clawX+=x*0.05;
     clawX=Math.max(0,Math.min(380,clawX));
     claw.style.left=clawX+"px";
 });
 
 /* SHOP */
-function buyPower(){
-    if(money>=30){
-        money-=30;
-        clawPower+=0.3;
-        updateMoney();
-    }
-}
-
-function buyMagnet(){
-    if(money>=50){
-        money-=50;
-        magnet=true;
-        updateMoney();
-    }
-}
-
-function buyLaser(){
-    if(money>=80){
-        money-=80;
-        laser=true;
-        updateMoney();
-    }
-}
-
-function updateMoney(){
-    document.getElementById("money").innerText=money;
-}
+function buyPower(){ if(money>=30){ money-=30; clawPower+=0.3; updateMoney(); } }
+function buyMagnet(){ if(money>=50){ money-=50; magnet=true; updateMoney(); } }
+function buyLaser(){ if(money>=80){ money-=80; laser=true; updateMoney(); } }
+function updateMoney(){ document.getElementById("money").innerText=money; }
 </script>
 
 </body>
