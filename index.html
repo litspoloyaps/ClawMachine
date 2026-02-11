@@ -3,186 +3,311 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini Claw Game</title>
+<title>Claw Machine Legendary</title>
 
 <style>
 body{
     margin:0;
-    background:#6cc5c9;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    font-family:monospace;
+    font-family:Arial;
+    background:black;
+    color:white;
+    text-align:center;
+    overflow:hidden;
 }
 
-/* MACHINE */
-.machine{
-    width:300px;
-    height:500px;
-    background:#7ed6db;
-    border:4px solid #2c8f95;
-    position:relative;
-}
-
-/* GLASS */
-.glass{
-    width:100%;
-    height:380px;
-    background:#8de1e6;
+/* GAME AREA */
+#game{
+    width:450px;
+    height:620px;
+    margin:10px auto;
+    background:#111;
+    border:6px solid cyan;
+    border-radius:20px;
     position:relative;
     overflow:hidden;
-    border-bottom:4px solid #2c8f95;
+    box-shadow:0 0 30px cyan;
 }
 
 /* CLAW */
-.claw{
+#claw{
     position:absolute;
     top:0;
-    width:40px;
-    height:60px;
+    left:190px;
+    width:60px;
+    height:120px;
     transition:top 0.2s;
 }
 
+.cable{
+    width:6px;
+    height:70px;
+    background:linear-gradient(#aaa,#555);
+    margin:auto;
+}
+
 .claw-head{
-    width:40px;
-    height:10px;
-    background:#ddd;
-    margin:auto;
+    width:60px;
+    height:20px;
+    background:linear-gradient(#eee,#777);
+    border-radius:10px;
+    position:relative;
 }
 
-.claw-arm{
-    width:4px;
+.arm{
+    position:absolute;
+    width:6px;
     height:40px;
-    background:#ccc;
-    margin:auto;
+    background:silver;
+    bottom:-35px;
+    transform-origin:top center;
+    transition:0.3s;
 }
 
-.grab{
-    filter:brightness(0.8);
+.left-arm{ left:10px; transform:rotate(25deg); }
+.right-arm{ right:10px; transform:rotate(-25deg); }
+
+.grab .left-arm{ transform:rotate(5deg); }
+.grab .right-arm{ transform:rotate(-5deg); }
+
+/* PRIZES */
+#prize-area{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    height:240px;
 }
 
-/* ANIMAL BLOCKS */
-.animal{
+.prize{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    position:absolute;
+    animation:float 3s infinite alternate ease-in-out;
+}
+
+@keyframes float{
+    from{transform:translateY(0);}
+    to{transform:translateY(-20px);}
+}
+
+.common{background:#3498db;}
+.rare{background:#9b59b6;}
+.epic{background:gold;}
+.boss{
+    background:red;
+    width:60px;
+    height:60px;
+    box-shadow:0 0 20px red;
+}
+
+/* JOYSTICK */
+#joystick{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    border:3px solid cyan;
+    margin:10px auto;
+    position:relative;
+    touch-action:none;
+}
+
+#stick{
     width:50px;
     height:50px;
-    border-radius:8px;
+    background:cyan;
+    border-radius:50%;
     position:absolute;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:28px;
-    background:#fff;
+    top:35px;
+    left:35px;
 }
 
-/* CONTROL AREA */
-.controls{
-    height:120px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+/* GAME OVER */
+#gameOver{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    display:none;
     flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    font-size:30px;
+    animation:fadeIn 1s forwards;
 }
 
-button{
-    padding:10px 20px;
-    margin:5px;
-    background:#2c8f95;
-    color:white;
-    border:none;
-    font-size:16px;
+@keyframes fadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
 }
 
-.score{
-    margin-top:5px;
+.winner{
+    animation:glow 1s infinite alternate;
+}
+
+@keyframes glow{
+    from{text-shadow:0 0 10px gold;}
+    to{text-shadow:0 0 30px red;}
 }
 </style>
 </head>
 <body>
 
-<div class="machine">
-    <div class="glass" id="glass">
-        <div class="claw" id="claw">
-            <div class="claw-head"></div>
-            <div class="claw-arm"></div>
+<h2>🎮 Claw Machine Legendary</h2>
+
+<div id="game">
+    <div id="claw">
+        <div class="cable"></div>
+        <div class="claw-head">
+            <div class="arm left-arm"></div>
+            <div class="arm right-arm"></div>
         </div>
     </div>
+    <div id="prize-area"></div>
+</div>
 
-    <div class="controls">
-        <button onclick="dropClaw()">DROP</button>
-        <div class="score">Score: <span id="score">0</span></div>
-    </div>
+<div>
+Player 1: <span id="score1">0</span> |
+Player 2: <span id="score2">0</span>
+</div>
+
+<button onclick="insertCoin()">🪙 Insert Coin</button>
+<button onclick="dropClaw()">⬇ Drop</button>
+<button onclick="endGame()">End Game</button>
+
+<!-- JOYSTICK -->
+<div id="joystick">
+    <div id="stick"></div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameOver">
+    <div id="winnerText" class="winner"></div>
+    <button onclick="restart()">Play Again</button>
 </div>
 
 <script>
 const claw=document.getElementById("claw");
-const glass=document.getElementById("glass");
-let clawX=0;
-let direction=1;
+const prizeArea=document.getElementById("prize-area");
+
+let clawX=190;
 let dropping=false;
-let score=0;
+let scores={1:0,2:0};
+let player=1;
+let credits=0;
 
-/* CREATE ANIMALS */
-const animals=["🐻","🐱","🐼","🐸","🐤","🐰"];
+const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 
-function createAnimals(){
-    for(let i=0;i<8;i++){
-        let a=document.createElement("div");
-        a.className="animal";
-        a.innerHTML=animals[Math.floor(Math.random()*animals.length)];
-        a.style.left=Math.random()*240+"px";
-        a.style.bottom=Math.random()*200+"px";
-        glass.appendChild(a);
+/* COIN SOUND */
+function insertCoin(){
+    credits++;
+    playCoin();
+}
+
+function playCoin(){
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(800,audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+0.1);
+    gain.gain.setValueAtTime(0.3,audioCtx.currentTime);
+    osc.start();
+    osc.stop(audioCtx.currentTime+0.2);
+}
+
+/* PRIZES */
+function createPrizes(){
+    prizeArea.innerHTML="";
+    for(let i=0;i<6;i++){
+        let p=document.createElement("div");
+        p.className="prize common";
+        p.dataset.points=1;
+        p.dataset.baseChance=0.8;
+        p.style.left=Math.random()*380+"px";
+        p.style.bottom=Math.random()*180+"px";
+        prizeArea.appendChild(p);
     }
 }
-createAnimals();
+createPrizes();
 
-/* AUTO MOVE CLAW */
-function moveClaw(){
-    if(dropping) return;
-    clawX+=2*direction;
-    if(clawX<=0 || clawX>=260) direction*=-1;
-    claw.style.left=clawX+"px";
-}
-setInterval(moveClaw,16);
-
-/* DROP FUNCTION */
+/* SMART PHYSICS */
 function dropClaw(){
-    if(dropping) return;
+    if(dropping||credits<=0)return;
+    credits--;
     dropping=true;
     claw.classList.add("grab");
 
     let y=0;
     let interval=setInterval(()=>{
-        y+=8;
+        y+=10;
         claw.style.top=y+"px";
-        if(y>=300){
+        if(y>=420){
             clearInterval(interval);
             checkCatch();
         }
     },30);
 }
 
-/* SIMPLE CATCH LOGIC */
 function checkCatch(){
-    const items=document.querySelectorAll(".animal");
-    items.forEach(item=>{
-        const ir=item.getBoundingClientRect();
+    const prizes=document.querySelectorAll(".prize");
+    prizes.forEach(p=>{
+        const pr=p.getBoundingClientRect();
         const cr=claw.getBoundingClientRect();
-        if(cr.left<ir.right && cr.right>ir.left && cr.bottom>ir.top){
-            if(Math.random()<0.6){
-                item.remove();
-                score++;
-                document.getElementById("score").innerText=score;
+
+        if(cr.left<pr.right&&cr.right>pr.left){
+            let centerDiff=Math.abs((cr.left+30)-(pr.left+20));
+            let accuracy=Math.max(0,1-centerDiff/60); 
+            let finalChance=p.dataset.baseChance*accuracy;
+
+            if(Math.random()<finalChance){
+                scores[player]+=parseInt(p.dataset.points);
+                p.remove();
             }
         }
     });
+
+    document.getElementById("score1").innerText=scores[1];
+    document.getElementById("score2").innerText=scores[2];
+
+    player=player===1?2:1;
 
     setTimeout(()=>{
         claw.style.top="0";
         claw.classList.remove("grab");
         dropping=false;
     },500);
+}
+
+/* JOYSTICK CONTROL */
+const joystick=document.getElementById("joystick");
+const stick=document.getElementById("stick");
+
+joystick.addEventListener("touchmove",e=>{
+    const rect=joystick.getBoundingClientRect();
+    const touch=e.touches[0];
+    let x=touch.clientX-rect.left-60;
+    x=Math.max(-40,Math.min(40,x));
+    stick.style.left=(35+x)+"px";
+
+    clawX+=x*0.05;
+    clawX=Math.max(0,Math.min(380,clawX));
+    claw.style.left=clawX+"px";
+});
+
+/* GAME OVER */
+function endGame(){
+    document.getElementById("gameOver").style.display="flex";
+    let winner="Draw!";
+    if(scores[1]>scores[2])winner="Player 1 Wins!";
+    if(scores[2]>scores[1])winner="Player 2 Wins!";
+    document.getElementById("winnerText").innerText=winner;
+}
+
+function restart(){
+    scores={1:0,2:0};
+    document.getElementById("score1").innerText=0;
+    document.getElementById("score2").innerText=0;
+    document.getElementById("gameOver").style.display="none";
+    createPrizes();
 }
 </script>
 
