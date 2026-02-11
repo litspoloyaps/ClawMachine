@@ -3,29 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claw Machine Legendary</title>
+<title>Claw Machine Cyberpunk</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 body{
     margin:0;
-    font-family:Arial;
-    background:black;
-    color:white;
+    font-family:'Orbitron',sans-serif;
+    background:radial-gradient(circle at center,#0f0f2e,#000);
+    color:#0ff;
     text-align:center;
-    overflow:hidden;
 }
 
-/* GAME AREA */
+h2{
+    text-shadow:0 0 10px #0ff;
+}
+
 #game{
-    width:450px;
-    height:620px;
+    width:90vw;
+    max-width:450px;
+    height:75vh;
+    max-height:620px;
     margin:10px auto;
-    background:#111;
-    border:6px solid cyan;
+    background:linear-gradient(180deg,#111,#000);
+    border:4px solid #0ff;
     border-radius:20px;
     position:relative;
     overflow:hidden;
-    box-shadow:0 0 30px cyan;
+    box-shadow:0 0 30px #0ff, inset 0 0 40px #00f;
 }
 
 /* CLAW */
@@ -48,7 +54,7 @@ body{
 .claw-head{
     width:60px;
     height:20px;
-    background:linear-gradient(#eee,#777);
+    background:linear-gradient(#0ff,#00aaff);
     border-radius:10px;
     position:relative;
 }
@@ -57,7 +63,7 @@ body{
     position:absolute;
     width:6px;
     height:40px;
-    background:silver;
+    background:#0ff;
     bottom:-35px;
     transform-origin:top center;
     transition:0.3s;
@@ -87,7 +93,7 @@ body{
 
 @keyframes float{
     from{transform:translateY(0);}
-    to{transform:translateY(-20px);}
+    to{transform:translateY(-15px);}
 }
 
 .common{background:#3498db;}
@@ -100,12 +106,26 @@ body{
     box-shadow:0 0 20px red;
 }
 
-/* JOYSTICK */
+/* UI */
+button{
+    background:black;
+    border:2px solid #0ff;
+    color:#0ff;
+    padding:6px 10px;
+    margin:4px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#0ff;
+    color:black;
+}
+
 #joystick{
     width:120px;
     height:120px;
     border-radius:50%;
-    border:3px solid cyan;
+    border:3px solid #0ff;
     margin:10px auto;
     position:relative;
     touch-action:none;
@@ -114,44 +134,17 @@ body{
 #stick{
     width:50px;
     height:50px;
-    background:cyan;
+    background:#0ff;
     border-radius:50%;
     position:absolute;
     top:35px;
     left:35px;
 }
-
-/* GAME OVER */
-#gameOver{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.95);
-    display:none;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    font-size:30px;
-    animation:fadeIn 1s forwards;
-}
-
-@keyframes fadeIn{
-    from{opacity:0;}
-    to{opacity:1;}
-}
-
-.winner{
-    animation:glow 1s infinite alternate;
-}
-
-@keyframes glow{
-    from{text-shadow:0 0 10px gold;}
-    to{text-shadow:0 0 30px red;}
-}
 </style>
 </head>
 <body>
 
-<h2>🎮 Claw Machine Legendary</h2>
+<h2>🌌 Claw Machine Cyberpunk</h2>
 
 <div id="game">
     <div id="claw">
@@ -166,22 +159,21 @@ body{
 
 <div>
 Player 1: <span id="score1">0</span> |
-Player 2: <span id="score2">0</span>
+AI: <span id="score2">0</span>
 </div>
+
+<div>💰 Money: <span id="money">50</span></div>
 
 <button onclick="insertCoin()">🪙 Insert Coin</button>
 <button onclick="dropClaw()">⬇ Drop</button>
-<button onclick="endGame()">End Game</button>
 
-<!-- JOYSTICK -->
+<h3>🏪 Shop</h3>
+<button onclick="buyPower()">Stronger Claw (30)</button>
+<button onclick="buyMagnet()">Magnet (50)</button>
+<button onclick="buyLaser()">Laser (80)</button>
+
 <div id="joystick">
     <div id="stick"></div>
-</div>
-
-<!-- GAME OVER -->
-<div id="gameOver">
-    <div id="winnerText" class="winner"></div>
-    <button onclick="restart()">Play Again</button>
 </div>
 
 <script>
@@ -190,46 +182,62 @@ const prizeArea=document.getElementById("prize-area");
 
 let clawX=190;
 let dropping=false;
-let scores={1:0,2:0};
-let player=1;
+
+let gameState={
+    player:1,
+    scores:{1:0,2:0}
+};
+
 let credits=0;
+let money=50;
+let clawPower=1;
+let magnet=false;
+let laser=false;
+let aiEnabled=true;
 
 const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 
-/* COIN SOUND */
-function insertCoin(){
-    credits++;
-    playCoin();
-}
-
-function playCoin(){
-    const osc=audioCtx.createOscillator();
-    const gain=audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.frequency.setValueAtTime(800,audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+0.1);
-    gain.gain.setValueAtTime(0.3,audioCtx.currentTime);
-    osc.start();
-    osc.stop(audioCtx.currentTime+0.2);
-}
-
-/* PRIZES */
+/* CREATE PRIZES */
 function createPrizes(){
     prizeArea.innerHTML="";
-    for(let i=0;i<6;i++){
+    for(let i=0;i<10;i++){
         let p=document.createElement("div");
-        p.className="prize common";
-        p.dataset.points=1;
-        p.dataset.baseChance=0.8;
-        p.style.left=Math.random()*380+"px";
+        let rand=Math.random();
+
+        if(rand<0.6){
+            p.className="prize common";
+            p.dataset.points=1;
+            p.dataset.baseChance=0.8;
+        }
+        else if(rand<0.85){
+            p.className="prize rare";
+            p.dataset.points=3;
+            p.dataset.baseChance=0.5;
+        }
+        else if(rand<0.97){
+            p.className="prize epic";
+            p.dataset.points=5;
+            p.dataset.baseChance=0.3;
+        }
+        else{
+            p.className="prize boss";
+            p.dataset.points=10;
+            p.dataset.baseChance=0.15;
+        }
+
+        p.style.left=Math.random()*360+"px";
         p.style.bottom=Math.random()*180+"px";
         prizeArea.appendChild(p);
     }
 }
 createPrizes();
 
-/* SMART PHYSICS */
+/* INSERT COIN */
+function insertCoin(){
+    credits++;
+}
+
+/* DROP */
 function dropClaw(){
     if(dropping||credits<=0)return;
     credits--;
@@ -247,44 +255,75 @@ function dropClaw(){
     },30);
 }
 
+/* CHECK CATCH */
 function checkCatch(){
     const prizes=document.querySelectorAll(".prize");
+
     prizes.forEach(p=>{
         const pr=p.getBoundingClientRect();
         const cr=claw.getBoundingClientRect();
 
         if(cr.left<pr.right&&cr.right>pr.left){
             let centerDiff=Math.abs((cr.left+30)-(pr.left+20));
-            let accuracy=Math.max(0,1-centerDiff/60); 
-            let finalChance=p.dataset.baseChance*accuracy;
+            let accuracy=Math.max(0,1-centerDiff/60);
+            let finalChance=(p.dataset.baseChance*accuracy*clawPower);
+
+            if(magnet) finalChance+=0.1;
+            if(laser) finalChance=1;
 
             if(Math.random()<finalChance){
-                scores[player]+=parseInt(p.dataset.points);
+                let points=parseInt(p.dataset.points);
+                gameState.scores[gameState.player]+=points;
+                money+=points*5;
+                document.getElementById("money").innerText=money;
                 p.remove();
             }
         }
     });
 
-    document.getElementById("score1").innerText=scores[1];
-    document.getElementById("score2").innerText=scores[2];
+    document.getElementById("score1").innerText=gameState.scores[1];
+    document.getElementById("score2").innerText=gameState.scores[2];
 
-    player=player===1?2:1;
+    gameState.player=gameState.player===1?2:1;
 
     setTimeout(()=>{
         claw.style.top="0";
         claw.classList.remove("grab");
         dropping=false;
+
+        if(aiEnabled && gameState.player===2){
+            setTimeout(aiMove,1000);
+        }
     },500);
 }
 
-/* JOYSTICK CONTROL */
+/* AI MOVE */
+function aiMove(){
+    if(credits<=0)return;
+    clawX=Math.random()*380;
+    claw.style.left=clawX+"px";
+    dropClaw();
+}
+
+/* KEYBOARD SUPPORT */
+document.addEventListener("keydown",e=>{
+    if(dropping)return;
+
+    if(e.key==="ArrowLeft") clawX-=15;
+    if(e.key==="ArrowRight") clawX+=15;
+    if(e.key===" ") dropClaw();
+
+    clawX=Math.max(0,Math.min(380,clawX));
+    claw.style.left=clawX+"px";
+});
+
+/* JOYSTICK */
 const joystick=document.getElementById("joystick");
 const stick=document.getElementById("stick");
 
-joystick.addEventListener("touchmove",e=>{
+joystick.addEventListener("pointermove",e=>{
     const rect=joystick.getBoundingClientRect();
-    const touch=e.touches[0];
-    let x=touch.clientX-rect.left-60;
+    let x=e.clientX-rect.left-60;
     x=Math.max(-40,Math.min(40,x));
     stick.style.left=(35+x)+"px";
 
@@ -293,21 +332,33 @@ joystick.addEventListener("touchmove",e=>{
     claw.style.left=clawX+"px";
 });
 
-/* GAME OVER */
-function endGame(){
-    document.getElementById("gameOver").style.display="flex";
-    let winner="Draw!";
-    if(scores[1]>scores[2])winner="Player 1 Wins!";
-    if(scores[2]>scores[1])winner="Player 2 Wins!";
-    document.getElementById("winnerText").innerText=winner;
+/* SHOP */
+function buyPower(){
+    if(money>=30){
+        money-=30;
+        clawPower+=0.3;
+        updateMoney();
+    }
 }
 
-function restart(){
-    scores={1:0,2:0};
-    document.getElementById("score1").innerText=0;
-    document.getElementById("score2").innerText=0;
-    document.getElementById("gameOver").style.display="none";
-    createPrizes();
+function buyMagnet(){
+    if(money>=50){
+        money-=50;
+        magnet=true;
+        updateMoney();
+    }
+}
+
+function buyLaser(){
+    if(money>=80){
+        money-=80;
+        laser=true;
+        updateMoney();
+    }
+}
+
+function updateMoney(){
+    document.getElementById("money").innerText=money;
 }
 </script>
 
